@@ -197,6 +197,10 @@ void PoseGraph::addKeyFrame(KeyFrame* cur_kf, bool flag_detect_loop)
         // loop_path_file.close();
 
         // 修改为tum格式
+        Eigen::Isometry3d Twb = Utility::transformBaselink(Q, P);
+        Q = Twb.rotation();
+        P = Twb.translation();  
+             
         ofstream loop_path_file2(VINS_RESULT_PATH, ios::app);
         loop_path_file2.setf(ios::fixed,  ios::floatfield);
         loop_path_file2.precision(9);
@@ -859,6 +863,10 @@ void PoseGraph::updatePath()
             // loop_path_file.close();
 
             // 修改为tum格式输出
+            Eigen::Isometry3d Twb = Utility::transformBaselink(Q, P);
+            Q = Twb.rotation();
+            P = Twb.translation();
+
             ofstream loop_path_file2(VINS_RESULT_PATH, ios::app);
             loop_path_file2.setf(ios::fixed,  ios::floatfield);
             loop_path_file2.precision(9);

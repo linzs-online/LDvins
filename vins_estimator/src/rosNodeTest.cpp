@@ -321,7 +321,7 @@ int main(int argc, char **argv)
     ros::Subscriber sub_cam_switch = n.subscribe("/vins_cam_switch", 100, cam_switch_callback);
     std::thread sync_thread{sync_process}; //创建sync_thread线程，指向sync_process，这里边处理了processMeasurements的线程
     
-    ros::Subscriber ground_truth = n.subscribe("/odometry", 100, ground_truth_callback);
+    // ros::Subscriber ground_truth = n.subscribe("/odometry", 100, ground_truth_callback);
 
     ros::spin(); // 用于触发topic, service的响应队列
     // 如果你的程序写了相关的消息订阅函数，那么程序在执行过程中，除了主程序以外，ROS还会自动在后台按照你规定的格式，接受订阅的消息，但是所接到的消息并不是

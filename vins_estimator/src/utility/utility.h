@@ -148,4 +148,15 @@ class Utility
         return angle_degrees +
             two_pi * std::floor((-angle_degrees + T(180)) / two_pi);
     };
+
+    static Eigen::Isometry3d transformBaselink(const Eigen::Quaterniond& q, const Eigen::Vector3d& t) {
+        Eigen::Isometry3d Twi(q);
+        Twi.pretranslate(t);
+
+        Eigen::Isometry3d Tbi(Eigen::Quaterniond(0.550447, -0.51761, 0.453209, -0.472959));
+        Tbi.pretranslate(Eigen::Vector3d(0.388943, 0.0084219, 1.20522));
+
+        Eigen::Isometry3d Twb = Tbi * Twi * Tbi.inverse();
+        return Twb;
+    }
 };

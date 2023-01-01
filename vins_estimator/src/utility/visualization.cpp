@@ -175,11 +175,13 @@ void pubOdometry(const Estimator &estimator, const std_msgs::Header &header)
         odometry.header = header;
         odometry.header.frame_id = "world";
         odometry.child_frame_id = "world";
-        Quaterniond tmp_Q;
-        tmp_Q = Quaterniond(estimator.Rs[WINDOW_SIZE]);
-        odometry.pose.pose.position.x = estimator.Ps[WINDOW_SIZE].x();
-        odometry.pose.pose.position.y = estimator.Ps[WINDOW_SIZE].y();
-        odometry.pose.pose.position.z = estimator.Ps[WINDOW_SIZE].z();
+
+        Quaterniond tmp_Q(estimator.Rs[WINDOW_SIZE]);
+        Eigen::Vector3d tmp_T = estimator.Ps[WINDOW_SIZE];
+
+        odometry.pose.pose.position.x = tmp_T.x();
+        odometry.pose.pose.position.y = tmp_T.y();
+        odometry.pose.pose.position.z = tmp_T.z();
         odometry.pose.pose.orientation.x = tmp_Q.x();
         odometry.pose.pose.orientation.y = tmp_Q.y();
         odometry.pose.pose.orientation.z = tmp_Q.z();
@@ -216,20 +218,24 @@ void pubOdometry(const Estimator &estimator, const std_msgs::Header &header)
         //       << estimator.Vs[WINDOW_SIZE].z() << "," << endl;
         // foutC.close();
         // 修改为tum格式方便后面用evo评估精度
+
+        Eigen::Isometry3d Twb = Utility::transformBaselink(tmp_Q, tmp_T);
+        tmp_Q = Twb.rotation();
+        tmp_T = Twb.translation();
+
         ofstream foutC2(VINS_RESULT_PATH, ios::app);
         foutC2.precision(9);
         foutC2.setf(ios::fixed,  ios::floatfield);
         foutC2 << header.stamp.toSec() << " ";
         foutC2.precision(6);
-        foutC2 	<< estimator.Ps[WINDOW_SIZE].x() << " "
-                << estimator.Ps[WINDOW_SIZE].y() << " "
-                << estimator.Ps[WINDOW_SIZE].z() << " "
+        foutC2 	<< tmp_T.x() << " "
+                << tmp_T.y() << " "
+                << tmp_T.z() << " "
                 << tmp_Q.x() << " "
                 << tmp_Q.y() << " "
                 << tmp_Q.z() << " "
                 << tmp_Q.w() << endl;
         foutC2.close();
-        Eigen::Vector3d tmp_T = estimator.Ps[WINDOW_SIZE];
         printf("time: %f, t: %f %f %f q: %f %f %f %f \n", header.stamp.toSec(), tmp_T.x(), tmp_T.y(), tmp_T.z(),
                                                           tmp_Q.w(), tmp_Q.x(), tmp_Q.y(), tmp_Q.z());
     }
