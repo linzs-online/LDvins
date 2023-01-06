@@ -50,8 +50,8 @@ body_T_cam1: !!opencv-matrix
 multiple_thread: 1
 
 #feature traker paprameters
-max_cnt: 160            # max feature number in feature tracking
-min_dist: 30            # min distance between two features 
+max_cnt: 150            # max feature number in feature tracking
+min_dist: 25            # min distance between two features 
 freq: 10                # frequence (Hz) of publish tracking result. At least 10Hz for good estimation. If set 0, the frequence will be same as raw image 
 F_threshold: 1.0        # ransac threshold (pixel)
 show_track: 1           # publish tracking image as topic
@@ -63,10 +63,10 @@ max_num_iterations: 8   # max solver itrations, to guarantee real time
 keyframe_parallax: 10.0 # keyframe selection threshold (pixel)
 
 #imu parameters       The more accurate parameters you provide, the better performance
-acc_n: 0.2 #0.17234583598926773 #2.9840535876578939e-02          # accelerometer measurement noise standard deviation. #0.2
-gyr_n: 0.02785349462679809 #4.8602774318549456e-03         # gyroscope measurement noise standard deviation.     #0.05
-acc_w: 0.02 #0.0004303245667795518 #9.2450042830019173e-03        # accelerometer bias random work noise standard deviation.  #0.02
-gyr_w: 1.8512832361420828e-05 #3.0172667291423203e-05       # gyroscope bias random work noise standard deviation.     #4.0e-5
+acc_n: 0.23143457385795081 #0.17234583598926773 #2.9840535876578939e-02          # accelerometer measurement noise standard deviation. #0.2
+gyr_n: 0.05103825282342047 #4.8602774318549456e-03         # gyroscope measurement noise standard deviation.     #0.05
+acc_w: 3.14347302760425266e-4 #0.0004303245667795518 #9.2450042830019173e-03        # accelerometer bias random work noise standard deviation.  #0.02
+gyr_w: 3.14347306334140424e-5 #3.0172667291423203e-05       # gyroscope bias random work noise standard deviation.     #4.0e-5
 g_norm: 9.81       # gravity magnitude
 
 #unsynchronization parameters
@@ -81,3 +81,5 @@ save_image: 0                   # save image in pose graph for visualization pru
 # 通过topic保存真值
 save_groundTruth: 0
 ground_truth_save_path: "/home/linzs/vinsOutput/ground_truth.csv"
+
+onnx_model_path: "/home/auto/lihao/segmentation/Fast-SCNN-pytorch/c++2Python/onnxc++/model_onnx.onnx"

@@ -181,7 +181,7 @@ void Estimator::inputImage(double t, const cv::Mat &_img, const cv::Mat &_img1)
         featureFrame = featureTracker.trackImage(t, _img);// 追踪单目
     else
         featureFrame = featureTracker.trackImage(t, _img, _img1);// 追踪双目
-    printf("featureTracker time: %f\n", featureTrackerTime.toc());
+    printf("featureTracker time: %f\n ms", featureTrackerTime.toc());
 
     if (SHOW_TRACK)//这个应该是展示轨迹 
     {
@@ -195,7 +195,7 @@ void Estimator::inputImage(double t, const cv::Mat &_img, const cv::Mat &_img1)
 
     }
     
-    if(MULTIPLE_THREAD) //FIXME: 多线程的处理还是很迷糊 
+    if(MULTIPLE_THREAD) 
     {     
         if(inputImageCnt % 2 == 0)
         {
@@ -315,7 +315,7 @@ void Estimator::processMeasurements()
                     break;
                 else
                 {
-                    printf("wait for imu ... \n");
+                    //printf("wait for imu ... \n");
                     if (! MULTIPLE_THREAD)
                         return;
                     std::chrono::milliseconds dura(5);//定义5ms的延迟

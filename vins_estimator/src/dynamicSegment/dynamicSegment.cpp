@@ -1,5 +1,5 @@
 #include "dynamicSegment.h"
-// #include "logger.h"
+#include "logger.h"
 
 bool SampleOnnx::build()
 {

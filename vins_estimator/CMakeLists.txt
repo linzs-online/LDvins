@@ -8,13 +8,14 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -g")
 
 # 开启动态行人分割
 set(open_segment_or_not no)
-if(${open_segment_or_not} STREQUAL "Yes")
+if(${open_segment_or_not} STREQUAL "yes")
   message(=============================================================)
   message("Open Dynamic Obeject Segment function!")
   message(=============================================================)
   add_definitions(-DSegmentDynamic)
-  set(CUDA_TOOLKIT_ROOT_DIR "/usr/local/cuda-11.4")
+  set(CUDA_TOOLKIT_ROOT_DIR "/usr/local/cuda-11.7")
   set(TENSORRT_DIR "/home/auto/lihao/download/softwares/TensorRT-8.4.2.4.Linux.x86_64-gnu.cuda-11.6.cudnn8.4/TensorRT-8.4.2.4")
+  # set(TENSORRT_DIR "/home/linzs/libsrc/TensorRT-8.4.3.1")
 endif()
 
 find_package(catkin REQUIRED COMPONENTS
@@ -48,7 +49,7 @@ include_directories(
   ${EIGEN3_INCLUDE_DIR}
 )
 
-if(${open_segment_or_not} STREQUAL "Yes")
+if(${open_segment_or_not} STREQUAL "yes")
 include_directories(
   "/usr/local/include"
   ${TENSORRT_DIR}/samples/common
@@ -91,7 +92,7 @@ target_link_libraries(vins_lib ${catkin_LIBRARIES} ${OpenCV_LIBS} ${CERES_LIBRAR
 add_executable(vins_node src/rosNodeTest.cpp)
 target_link_libraries(vins_node vins_lib) 
 
-if(${open_segment_or_not} STREQUAL "Yes")
+if(${open_segment_or_not} STREQUAL "yes")
   target_link_libraries(vins_node segement_lib
                                   ${TENSORRT_DIR}/targets/x86_64-linux-gnu/bin/common/logger.a)
 endif()
