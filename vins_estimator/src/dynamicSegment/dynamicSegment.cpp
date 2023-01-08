@@ -92,7 +92,6 @@ bool SampleOnnx::infer(cv::Mat& img_raw, cv::Mat& infer_result)
 {
     // Create RAII buffer manager object
     samplesCommon::BufferManager buffers(mEngine);
- 
     auto context = SampleUniquePtr<nvinfer1::IExecutionContext>(mEngine->createExecutionContext());
     if (!context)
     {
@@ -101,43 +100,49 @@ bool SampleOnnx::infer(cv::Mat& img_raw, cv::Mat& infer_result)
  
     //Read the image into the managed buffers
     ASSERT(mParams.inputTensorNames.size() == 1);
- 
+    
+
+    // TicToc processInputTime;
     if (!processInput(buffers, img_raw))
     {
         return false;
     }
- 
+    // printf("   processInputTime: %f \n", processInputTime.toc());  //3.5ms
     // Memcpy from host input buffers to device input buffers
+    // TicToc copyInputToDeviceTime;
     buffers.copyInputToDevice();
- 
+    // printf("copyInputToDeviceTime: %f \n", copyInputToDeviceTime.toc());
+    // TicToc gpuInferTime;
     bool status = context->executeV2(buffers.getDeviceBindings().data());
     if (!status)
     {
         return false;
     }
- 
+    // printf("  gpuInferTime: %f \n", gpuInferTime.toc());  //1.5ms
     // Memcpy from device output buffers to host output buffers
+    // TicToc copyOutputToHostTime;
     buffers.copyOutputToHost();
- 
+    // printf("copyOutputToHostTime: %f \n",copyOutputToHostTime.toc()); //0.5ms
+    // TicToc getOutputTime;
     // Verify results
     if (!getOutput(buffers, infer_result))
     {
         return false;
     }
- 
+    // printf("getOutputTime: %f \n",getOutputTime.toc()); //0.3ms
     return true;
 }
  
 bool SampleOnnx::processInput(const samplesCommon::BufferManager& buffers, cv::Mat& img_raw)
 {
-    std::cout << "mINputDims.d[0]:" << mInputDims.d[0] << std::endl;
-    std::cout << "mINputDims.d[1]:" << mInputDims.d[1] << std::endl;
-    std::cout << "mINputDims.d[2]:" << mInputDims.d[2] << std::endl;
-    std::cout << "mINputDims.d[3]:" << mInputDims.d[3] << std::endl;
+    // std::cout << "mINputDims.d[0]:" << mInputDims.d[0] << std::endl;
+    // std::cout << "mINputDims.d[1]:" << mInputDims.d[1] << std::endl;
+    // std::cout << "mINputDims.d[2]:" << mInputDims.d[2] << std::endl;
+    // std::cout << "mINputDims.d[3]:" << mInputDims.d[3] << std::endl;
  
     cv::Mat image_conv;
     cv::cvtColor(img_raw, image_conv, cv::COLOR_BGR2RGB);
-    std::cout << image_conv.channels() << "," << image_conv.size().width << "," << image_conv.size().height << std::endl;
+    // std::cout << image_conv.channels() << "," << image_conv.size().width << "," << image_conv.size().height << std::endl;
 
     int target_size = 640;
     cv::resize(image_conv, image_conv, cv::Size(target_size, target_size),cv::INTER_LINEAR);
@@ -151,7 +156,7 @@ bool SampleOnnx::processInput(const samplesCommon::BufferManager& buffers, cv::M
     const int inputW = mInputDims.d[3];
     // Read a random digit file
     std::vector<float> fileData(inputH * inputW * channel);
- 
+    #pragma omp parallel for num_threads(20);
     for (int c = 0; c < channel; ++c)
     {
         for (int i = 0; i < image_conv.rows; ++i)
@@ -173,26 +178,25 @@ bool SampleOnnx::processInput(const samplesCommon::BufferManager& buffers, cv::M
 
 bool SampleOnnx::getOutput(const samplesCommon::BufferManager& buffers, cv::Mat& img_result)
 {
-    const int outputSize = mOutputDims.d[1];
-    std::cout << "mOutputDims.d[0]: " << mOutputDims.d[0] << std::endl;
-    std::cout << "mOutputDims.d[1]: " << mOutputDims.d[1] << std::endl;
-    std::cout << "mOutputDims.d[2]: " << mOutputDims.d[2] << std::endl;
-    std::cout << "mOutputDims.d[3]: " << mOutputDims.d[3] << std::endl;
-    std::cout << "outputSize: " << outputSize << std::endl;
+    // const int outputSize = mOutputDims.d[1];
+    // std::cout << "mOutputDims.d[0]: " << mOutputDims.d[0] << std::endl;
+    // std::cout << "mOutputDims.d[1]: " << mOutputDims.d[1] << std::endl;
+    // std::cout << "mOutputDims.d[2]: " << mOutputDims.d[2] << std::endl;
+    // std::cout << "mOutputDims.d[3]: " << mOutputDims.d[3] << std::endl;
+    // std::cout << "outputSize: " << outputSize << std::endl;
     float* output = static_cast<float*>(buffers.getHostBuffer(mParams.outputTensorNames[0]));
-    float val{0.0f};
-    int idx{0};
-    cv::Mat mask(640, 640, CV_8UC1, cv::Scalar(0));
+    img_result = cv::Mat(640, 640, CV_8UC1, cv::Scalar(0));
+    #pragma omp parallel for num_threads(20);
     for (int i = 0; i < 409600; i++)
     {
         if(output[i] < output[i+409600])
         {
             int row_number = i/640;
             int col_number = i % 640;
-            mask.at<int8_t>(row_number,col_number) = 255;
+            img_result.at<int8_t>(row_number,col_number) = 255;
         }
     }
-    img_result = mask.clone();
+    // img_result = mask.clone();
     // cv::imshow("img",mask);
     // cv::waitKey(0);
     return true;

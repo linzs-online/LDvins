@@ -134,14 +134,21 @@ map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> FeatureTracker::trackIm
     }
     */
     cur_pts.clear();
-
+// TicToc segmentThreadStartTime;
 #ifdef SegmentDynamic
-    sampleonnx_ptr->infer(cur_img, imSegment);
-    cv::resize(imSegment, imSegment, cur_img.size(),cv::INTER_LINEAR);
+    std::future<cv::Mat> imSegmentResult = std::async(std::launch::async,[this]() {
+            // TicToc segmentTime;
+            sampleonnx_ptr->infer(this->cur_img, this->imSegment);
+            // printf("segment time: %f ms \n", segmentTime.toc());
+            return this->imSegment;
+        }
+    );
+    
     // test the mask
     // cv::Point2f centre(300,150);
     // cv::circle(imSegment, centre, 100, cv::Scalar(255, 255, 255), -1);
 #endif
+// printf("segmentThreadStartTime: %f \n", segmentThreadStartTime.toc());
     // --------------如果上一帧有特征点，就直接进行LK追踪
     if (prev_pts.size() > 0) 
     {
@@ -166,8 +173,12 @@ map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> FeatureTracker::trackIm
                cv::calcOpticalFlowPyrLK(prev_img, cur_img, prev_pts, cur_pts, status, err, cv::Size(21, 21), 3);
         }
         else 
+        {
+            // TicToc OpticalFlowTrackingTime;
             //如果没有进行预测的话，直接是基于最大金字塔层次数为3
             cv::calcOpticalFlowPyrLK(prev_img, cur_img, prev_pts, cur_pts, status, err, cv::Size(21, 21), 3);
+            // printf("OpticalFlowTrackingTime: %f \n", OpticalFlowTrackingTime.toc());
+        }
         
         
         // reverse check 方向检查
@@ -196,6 +207,8 @@ map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> FeatureTracker::trackIm
                 status[i] = 0;
 
 #ifdef SegmentDynamic
+    imSegmentResult.get();
+    cv::resize(imSegment, imSegment, cur_img.size(),cv::INTER_LINEAR);
     //sampleonnx_ptr->infer(cur_img, imSegment);
     //cv::resize(imSegment, imSegment, cur_img.size(),cv::INTER_LINEAR);
     for (int i = 0; i < int(cur_pts.size()); i++)
@@ -207,8 +220,15 @@ map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> FeatureTracker::trackIm
         reduceVector(ids, status);
         reduceVector(track_cnt, status);
         ROS_DEBUG("temporal optical flow costs: %fms", t_o.toc());
-        printf("track cnt %d\n", (int)ids.size());
+        // printf("track cnt %d\n", (int)ids.size());
     }
+#ifdef SegmentDynamic
+    else
+    {
+        imSegmentResult.get();
+        cv::resize(imSegment, imSegment, cur_img.size(),cv::INTER_LINEAR);
+    }
+#endif
 
     for (auto &n : track_cnt)
         n++;

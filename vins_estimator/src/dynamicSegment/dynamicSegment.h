@@ -8,7 +8,7 @@
 #include "buffers.h"
 #include "common.h"
 #include "parserOnnxConfig.h"
-
+#include "../utility/tic_toc.h"
 class SampleOnnx
 {
     template <typename T>
@@ -27,7 +27,6 @@ private:
     samplesCommon::OnnxSampleParams mParams; //!< The parameters for the sample.
     nvinfer1::Dims mInputDims;  //!< The dimensions of the input to the network.
     nvinfer1::Dims mOutputDims; //!< The dimensions of the output to the network.
-    int mNumber{0};             //!< The number to classify
     std::shared_ptr<nvinfer1::ICudaEngine> mEngine; //!< The TensorRT engine used to run the network
     
     bool constructNetwork(SampleUniquePtr<nvinfer1::IBuilder>& builder,

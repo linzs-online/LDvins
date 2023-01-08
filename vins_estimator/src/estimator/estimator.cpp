@@ -181,7 +181,7 @@ void Estimator::inputImage(double t, const cv::Mat &_img, const cv::Mat &_img1)
         featureFrame = featureTracker.trackImage(t, _img);// 追踪单目
     else
         featureFrame = featureTracker.trackImage(t, _img, _img1);// 追踪双目
-    printf("featureTracker time: %f\n ms", featureTrackerTime.toc());
+    printf("featureTracker time: %f ms \n", featureTrackerTime.toc());
 
     if (SHOW_TRACK)//这个应该是展示轨迹 
     {
@@ -603,7 +603,7 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
     // 如果已经进行了初始化  
     else
     {
-        TicToc t_solve;//优化所用的时间
+        TicToc optimizateTime;;//优化所用的时间
         if(!USE_IMU)
             f_manager.initFramePoseByPnP(frame_count, Ps, Rs, tic, ric);//直接对下一帧求解位姿
         f_manager.triangulate(frame_count, Ps, Rs, tic, ric);
@@ -619,7 +619,8 @@ void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<doubl
             predictPtsInNextFrame();
         }
             
-        ROS_DEBUG("solver costs: %fms", t_solve.toc());
+        // ROS_DEBUG("solver costs: %fms", t_solve.toc());
+        printf("optimizate time: %f ms \n", optimizateTime.toc());
 
         if (failureDetection())
         {
