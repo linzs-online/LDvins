@@ -134,12 +134,16 @@ map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> FeatureTracker::trackIm
     }
     */
     cur_pts.clear();
-// TicToc segmentThreadStartTime;
+    // TicToc segmentThreadStartTime;
 #ifdef SegmentDynamic
     std::future<cv::Mat> imSegmentResult = std::async(std::launch::async,[this]() {
-            // TicToc segmentTime;
+            TicToc segmentTime;
             sampleonnx_ptr->infer(this->cur_img, this->imSegment);
-            // printf("segment time: %f ms \n", segmentTime.toc());
+            static double segmentCostSum = 0;
+            static uint32_t segmentCnt     = 0;
+            segmentCostSum += segmentTime.toc();
+            segmentCnt++;
+            ROS_DEBUG("average segment costs: %fms", segmentCostSum / (double)segmentCnt);
             return this->imSegment;
         }
     );
@@ -148,7 +152,7 @@ map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> FeatureTracker::trackIm
     // cv::Point2f centre(300,150);
     // cv::circle(imSegment, centre, 100, cv::Scalar(255, 255, 255), -1);
 #endif
-// printf("segmentThreadStartTime: %f \n", segmentThreadStartTime.toc());
+    // ROS_DEBUG("segmentThreadStartTime: %f \n", segmentThreadStartTime.toc());
     // --------------如果上一帧有特征点，就直接进行LK追踪
     if (prev_pts.size() > 0) 
     {
@@ -219,8 +223,13 @@ map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> FeatureTracker::trackIm
         reduceVector(cur_pts, status);
         reduceVector(ids, status);
         reduceVector(track_cnt, status);
-        ROS_DEBUG("temporal optical flow costs: %fms", t_o.toc());
-        // printf("track cnt %d\n", (int)ids.size());
+        //ROS_DEBUG("temporal optical flow costs: %fms", t_o.toc());
+        //  光流准确率，时间输出
+        static double OpticalFlow_time = 0;
+        static int    of_cnt_frame     = 0;
+        OpticalFlow_time += t_o.toc();
+        of_cnt_frame++;
+        ROS_DEBUG("average optical flow costs: %fms\n", OpticalFlow_time / (double)of_cnt_frame);
     }
 #ifdef SegmentDynamic
     else

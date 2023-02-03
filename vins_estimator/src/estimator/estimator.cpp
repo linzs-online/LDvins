@@ -169,8 +169,8 @@ void Estimator::changeSensorType(int use_imu, int use_stereo)
 // 其实是给featureTracker.trackImage输入图像，之后返回图像特征featureFrame。填充featureBuf
 // 之后执行processMeasurements
 void Estimator::inputImage(double t, const cv::Mat &_img, const cv::Mat &_img1)
-{        
-    inputImageCnt++;//、
+{   
+    inputImageCnt++;
     map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> featureFrame;
     // 数据格式为feature_id camera_id（0或1） xyz_uv_velocity（空间坐标，像素坐标和像素速度）
 
@@ -459,23 +459,16 @@ void Estimator::processIMU(double t, double dt, const Vector3d &linear_accelerat
 void Estimator::processImage(const map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> &image, const double header)
 // image 里边放的就是该图像的特征点 header 时间
 {
-    ROS_DEBUG("new image coming ------------------------------------------");//输入进来的其实只有特征点
+    ROS_DEBUG("new image features coming --------------------------------------   ----");//输入进来的其实只有特征点
     ROS_DEBUG("Adding feature points %lu", image.size());
 
     // 检测关键帧
     if (f_manager.addFeatureCheckParallax(frame_count, image, td))
-    {
         marginalization_flag = MARGIN_OLD;//新一阵将被作为关键帧!
-        //printf("keyframe\n");
-    }
     else
-    {
         marginalization_flag = MARGIN_SECOND_NEW;
-        //printf("non-keyframe\n");
-    }
-
     ROS_DEBUG("%s", marginalization_flag ? "Non-keyframe" : "Keyframe");
-    ROS_DEBUG("Solving %d", frame_count);
+    ROS_DEBUG("Solving %dth frame", frame_count);
     ROS_DEBUG("number of feature: %d", f_manager.getFeatureCount());
     Headers[frame_count] = header;
 

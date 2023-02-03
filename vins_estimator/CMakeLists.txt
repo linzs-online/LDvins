@@ -7,7 +7,7 @@ set(CMAKE_CXX_FLAGS "-std=c++14")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3 -Wall -g")
 
 # 开启动态行人分割
-set(open_segment_or_not no)
+set(open_segment_or_not yes)
 if(${open_segment_or_not} STREQUAL "yes")
   message(=============================================================)
   message("Open Dynamic Obeject Segment function!")

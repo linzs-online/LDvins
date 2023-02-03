@@ -272,6 +272,7 @@ int main(int argc, char **argv)
         params.fp16 = false;
         params.int8 = false;
         params.batchSize = 1;
+        
         sampleonnx_ptr = std::make_shared<SampleOnnx>(params);
         if (!sampleonnx_ptr->build())
         {
@@ -283,7 +284,7 @@ int main(int argc, char **argv)
 
     ros::init(argc, argv, "vins_estimator"); // ros的初始化ros::init(argc,argv,"my_node_name");// node_name，初始化一个节点
     ros::NodeHandle n("~"); // 获取节点的句柄，句柄可以让你通过构造函数指定命名空间，此处似乎有个命名空间的问题。用来对当前节点进行各种操作。
-    ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Info); //设置记录器级别ROS控制台默认名称
+    ros::console::set_logger_level(ROSCONSOLE_DEFAULT_NAME, ros::console::levels::Debug); //设置记录器级别ROS控制台默认名称
 
     if(argc != 2)
     {
