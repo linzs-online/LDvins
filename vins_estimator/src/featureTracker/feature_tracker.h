@@ -26,7 +26,10 @@
 #include "../utility/tic_toc.h"
 
 #ifdef SegmentDynamic
-#include "../dynamicSegment/dynamicSegment.h"
+#include <common/ilogger.hpp>
+#include <infer/trt_infer.hpp>
+#include <cuda_runtime.h>
+#include <builder/trt_builder.hpp>
 #endif
 
 using namespace std;

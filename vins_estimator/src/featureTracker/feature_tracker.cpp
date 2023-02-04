@@ -137,17 +137,34 @@ map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> FeatureTracker::trackIm
     // TicToc segmentThreadStartTime;
 #ifdef SegmentDynamic
     std::future<cv::Mat> imSegmentResult = std::async(std::launch::async,[this]() {
-            TicToc segmentTime;
-            sampleonnx_ptr->infer(this->cur_img, this->imSegment);
+            cv::Mat image_conv;
+            cv::cvtColor(this->cur_img, image_conv, cv::COLOR_BGR2RGB);
+            cv::resize(image_conv, image_conv, cv::Size(640,640), cv::INTER_LINEAR);
+            float mean[] = {0.485f, 0.456f, 0.406f};
+            float std[]  = {0.229f, 0.224f, 0.225f};
+            auto t0 = iLogger::timestamp_now_float();
+            engine_ptr->input()->set_norm_mat(0, image_conv, mean, std);
+            engine_ptr->forward();
+            this->imSegment = cv::Mat(engine_ptr->output()->size(2), engine_ptr->output()->size(3), CV_8UC1,cv::Scalar(0));;
+            uint8_t* res_ptr = this->imSegment.ptr<uint8_t>(0);
+            float* output = engine_ptr->output()->cpu<float>();
+            int num_class = this->imSegment.cols * this->imSegment.rows;
+            for(int i = 0; i < num_class; ++i){
+                if(output[i] < output[i+num_class])
+                {
+                    res_ptr[i] = 255;
+                }
+
+            }
             static double segmentCostSum = 0;
             static uint32_t segmentCnt     = 0;
-            segmentCostSum += segmentTime.toc();
             segmentCnt++;
-            ROS_DEBUG("average segment costs: %fms", segmentCostSum / (double)segmentCnt);
+            if(segmentCnt != 1) segmentCostSum += iLogger::timestamp_now_float() - t0;
+            ROS_DEBUG("average segment costs: %f", segmentCostSum / (double)segmentCnt);
             return this->imSegment;
         }
     );
-    
+
     // test the mask
     // cv::Point2f centre(300,150);
     // cv::circle(imSegment, centre, 100, cv::Scalar(255, 255, 255), -1);
@@ -229,7 +246,7 @@ map<int, vector<pair<int, Eigen::Matrix<double, 7, 1>>>> FeatureTracker::trackIm
         static int    of_cnt_frame     = 0;
         OpticalFlow_time += t_o.toc();
         of_cnt_frame++;
-        ROS_DEBUG("average optical flow costs: %fms\n", OpticalFlow_time / (double)of_cnt_frame);
+        ROS_DEBUG("average optical flow costs: %fms", OpticalFlow_time / (double)of_cnt_frame);
     }
 #ifdef SegmentDynamic
     else

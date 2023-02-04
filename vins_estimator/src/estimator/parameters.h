@@ -19,8 +19,11 @@
 #include <map>
 
 #ifdef SegmentDynamic
-#include "../dynamicSegment/dynamicSegment.h"
-extern std::shared_ptr<SampleOnnx> sampleonnx_ptr;
+#include <common/ilogger.hpp>
+#include <infer/trt_infer.hpp>
+#include <cuda_runtime.h>
+#include <builder/trt_builder.hpp>
+extern std::shared_ptr<TRT::Infer> engine_ptr;;
 #endif
 
 using namespace std;

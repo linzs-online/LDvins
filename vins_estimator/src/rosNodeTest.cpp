@@ -265,20 +265,21 @@ int main(int argc, char **argv)
 #ifdef SegmentDynamic
     // 加载tensorRT engine
     {
-        samplesCommon::OnnxSampleParams params;
-        params.onnxFileName = onnx_model_path;
-        params.inputTensorNames.push_back("input");
-        params.outputTensorNames.push_back("output");
-        params.fp16 = false;
-        params.int8 = false;
-        params.batchSize = 1;
-        
-        sampleonnx_ptr = std::make_shared<SampleOnnx>(params);
-        if (!sampleonnx_ptr->build())
-        {
-            std::cout << "conver oNNX to Tensorrt fail!!!" << std::endl;
+        iLogger::set_log_level(iLogger::LogLevel::Info);
+        // TRT::compile(
+        //     TRT::Mode::FP32,            /** 模式, fp32 fp16 int8  **/
+        //     1,             /** 最大batch size        **/
+        //     "/home/auto/linzs_ws/model_onnx_pruning.onnx",             /** onnx文件，输入         **/
+        //     "/home/auto/linzs_ws/model_onnx_pruning.fp32.trtmodel",     /** trt模型文件，输出      **/
+        //     {},
+        //     nullptr,
+        //     ""
+        // );
+        engine_ptr = TRT::load_infer("/home/auto/linzs_ws/model_onnx_pruning.fp32.trtmodel");
+        if(engine_ptr == nullptr){
+                INFOE("Engine is nullptr");
+                return -1;
         }
-        std::cout << "conver oNNX to Tensorrt ok!" << std::endl;
     }
 #endif
 

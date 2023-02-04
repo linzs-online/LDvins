@@ -10,7 +10,7 @@
 #include "parameters.h"
 
 #ifdef SegmentDynamic
-std::shared_ptr<SampleOnnx> sampleonnx_ptr;
+std::shared_ptr<TRT::Infer> engine_ptr;
 #endif
 
 double INIT_DEPTH;

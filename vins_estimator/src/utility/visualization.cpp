@@ -152,12 +152,12 @@ void printStatistics(const Estimator &estimator, double t)
         fs.release();
     }
 
-    static double sum_of_time = 0;
-    static int sum_of_calculation = 0;
-    sum_of_time += t;
-    sum_of_calculation++;
-    ROS_DEBUG("vo solver costs: %f ms", t);
-    ROS_DEBUG("average of time %f ms", sum_of_time / sum_of_calculation);
+    // static double sum_of_time = 0;
+    // static int sum_of_calculation = 0;
+    // sum_of_time += t;
+    // sum_of_calculation++;
+    // ROS_DEBUG("vo solver costs: %f ms", t);
+    // ROS_DEBUG("average vo solver of time %f ms", sum_of_time / sum_of_calculation);
 
     sum_of_path += (estimator.Ps[WINDOW_SIZE] - last_path).norm();
     last_path = estimator.Ps[WINDOW_SIZE];

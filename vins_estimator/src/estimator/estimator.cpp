@@ -181,7 +181,7 @@ void Estimator::inputImage(double t, const cv::Mat &_img, const cv::Mat &_img1)
         featureFrame = featureTracker.trackImage(t, _img);// 追踪单目
     else
         featureFrame = featureTracker.trackImage(t, _img, _img1);// 追踪双目
-    printf("featureTracker time: %f ms \n", featureTrackerTime.toc());
+    ROS_DEBUG("featureTracker time: %f ms", featureTrackerTime.toc());
 
     if (SHOW_TRACK)//这个应该是展示轨迹 
     {

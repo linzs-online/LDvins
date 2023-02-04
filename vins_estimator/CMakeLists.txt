@@ -13,9 +13,11 @@ if(${open_segment_or_not} STREQUAL "yes")
   message("Open Dynamic Obeject Segment function!")
   message(=============================================================)
   add_definitions(-DSegmentDynamic)
-  set(CUDA_TOOLKIT_ROOT_DIR "/usr/local/cuda-11.4")
-  set(TENSORRT_DIR "/home/auto/lihao/download/softwares/TensorRT-8.4.2.4.Linux.x86_64-gnu.cuda-11.6.cudnn8.4/TensorRT-8.4.2.4")
-  # set(TENSORRT_DIR "/home/linzs/libsrc/TensorRT-8.4.3.1")
+  set(CUDA_TOOLKIT_ROOT_DIR     "/usr/local/cuda-11.4")
+  set(CUDNN_DIR    "/home/auto/libSrc/cudnn-8.6.0.163")
+  set(TENSORRT_DIR "/home/auto/libSrc/TensorRT-8.4.3.1")
+  set(PROTOBUF_DIR "/home/auto/libSrc/protobuf-3.6.1_install")
+
 endif()
 
 find_package(catkin REQUIRED COMPONENTS
@@ -30,6 +32,23 @@ find_package(catkin REQUIRED COMPONENTS
 
 find_package(Ceres REQUIRED)
 include_directories(${catkin_INCLUDE_DIRS} ${CERES_INCLUDE_DIRS})
+find_package(CUDA REQUIRED)
+add_compile_options(-fPIC)
+include_directories(
+    ${PROJECT_SOURCE_DIR}/src
+    ${PROJECT_SOURCE_DIR}/src/tensorRT
+    ${PROJECT_SOURCE_DIR}/src/tensorRT/common
+    ${CUDA_TOOLKIT_ROOT_DIR}/include
+    ${PROTOBUF_DIR}/include
+    ${TENSORRT_DIR}/include
+    ${CUDNN_DIR}/include
+)
+link_directories(
+    ${PROTOBUF_DIR}/lib
+    ${TENSORRT_DIR}/lib
+    ${CUDA_TOOLKIT_ROOT_DIR}/lib64
+    ${CUDNN_DIR}/lib
+)
 
 find_package(OpenCV REQUIRED)
 include_directories(${Opencv_INCLUDE_DIRS})
@@ -50,21 +69,22 @@ include_directories(
 )
 
 if(${open_segment_or_not} STREQUAL "yes")
-include_directories(
-  "/usr/local/include"
-  ${TENSORRT_DIR}/samples/common
-  ${TENSORRT_DIR}/include
-  ${CUDA_TOOLKIT_ROOT_DIR}
-  ${CUDA_TOOLKIT_ROOT_DIR}/targets/x86_64-linux/include/
-)
+  set(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -O0 -Wfatal-errors -pthread -w -g")
+  set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -std=c++14 -O0 -Xcompiler -fPIC -g -w ${CUDA_GEN_CODE}")
+  file(GLOB_RECURSE trtcpp_srcs ${PROJECT_SOURCE_DIR}/src/tensorRT/*.cpp)
+  file(GLOB_RECURSE cuda_srcs ${PROJECT_SOURCE_DIR}/src/*.cu)
 
-add_library(segement_lib src/dynamicSegment/dynamicSegment.cpp)
-target_link_libraries(segement_lib ${OpenCV_LIBS}
-                                   ${CUDA_TOOLKIT_ROOT_DIR}/lib64/libcudart.so
-                                   ${TENSORRT_DIR}/lib/libnvinfer.so
-                                   ${TENSORRT_DIR}/lib/libnvparsers.so
-                                   ${TENSORRT_DIR}/lib/libnvinfer_plugin.so
-                                   ${TENSORRT_DIR}/lib/libnvonnxparser.so)
+  cuda_add_library(plugin_list SHARED ${cuda_srcs})
+  target_link_libraries(plugin_list nvinfer nvinfer_plugin)
+  target_link_libraries(plugin_list ${CUDA_LIBS} cublas cudart cudnn)
+  target_link_libraries(plugin_list protobuf-lite pthread)
+  target_link_libraries(plugin_list ${OpenCV_LIBS})
+
+  add_library(trtPro ${trtcpp_srcs})
+  target_link_libraries(trtPro nvinfer nvinfer_plugin)
+  target_link_libraries(trtPro cuda cublas cudart cudnn)
+  target_link_libraries(trtPro protobuf-lite pthread plugin_list)
+  target_link_libraries(trtPro ${OpenCV_LIBS})
 endif()
 
 catkin_package()
@@ -93,8 +113,7 @@ add_executable(vins_node src/rosNodeTest.cpp)
 target_link_libraries(vins_node vins_lib) 
 
 if(${open_segment_or_not} STREQUAL "yes")
-  target_link_libraries(vins_node segement_lib
-                                  ${TENSORRT_DIR}/targets/x86_64-linux-gnu/bin/common/logger.a)
+  target_link_libraries(vins_node trtPro)
 endif()
 
 
